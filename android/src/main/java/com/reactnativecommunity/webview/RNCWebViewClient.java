@@ -23,6 +23,7 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.reactnativecommunity.webview.events.TopHttpErrorEvent;
 import com.reactnativecommunity.webview.events.TopLoadingErrorEvent;
 import com.reactnativecommunity.webview.events.TopLoadingFinishEvent;
@@ -32,7 +33,7 @@ import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEven
 
 import java.util.concurrent.atomic.AtomicReference;
 
-class RNCWebViewClient extends WebViewClient {
+public class RNCWebViewClient extends WebViewClient {
     private static String TAG = "RNCWebViewClient";
     protected static final int SHOULD_OVERRIDE_URL_LOADING_TIMEOUT = 250;
 
@@ -295,11 +296,8 @@ class RNCWebViewClient extends WebViewClient {
     }
 
     protected void emitFinishEvent(WebView webView, String url) {
-        ((RNCWebView) webView).dispatchEvent(
-                webView,
-                new TopLoadingFinishEvent(
-                        webView.getId(),
-                        createWebViewEvent(webView, url)));
+        int reactTag = webView.getId();
+        UIManagerHelper.getEventDispatcher((ThemedReactContext)webView.getContext(), reactTag).dispatchEvent(new TopLoadingFinishEvent(webView.getId(), createWebViewEvent(webView, url)));
     }
 
     protected WritableMap createWebViewEvent(WebView webView, String url) {

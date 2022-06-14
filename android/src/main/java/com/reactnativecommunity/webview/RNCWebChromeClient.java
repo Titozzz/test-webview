@@ -1,6 +1,6 @@
 package com.reactnativecommunity.webview;
 
-import static com.reactnativecommunity.webview.RNCWebViewManagerImpl.getModule;
+//import static com.reactnativecommunity.webview.RNCWebViewManagerImpl.getModule;
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -30,6 +30,7 @@ import com.facebook.react.common.build.ReactBuildConfig;
 import com.facebook.react.modules.core.PermissionAwareActivity;
 import com.facebook.react.modules.core.PermissionListener;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
 
 import java.util.ArrayList;
@@ -119,11 +120,9 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
         event.putBoolean("canGoBack", webView.canGoBack());
         event.putBoolean("canGoForward", webView.canGoForward());
         event.putDouble("progress", (float) newProgress / 100);
-        ((RNCWebView) webView).dispatchEvent(
-                webView,
-                new TopLoadingProgressEvent(
-                        webView.getId(),
-                        event));
+
+        int reactTag = webView.getId();
+        UIManagerHelper.getEventDispatcher(this.mReactContext, reactTag).dispatchEvent(new TopLoadingProgressEvent(webView.getId(), event));
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -294,15 +293,15 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     };
 
     protected void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType) {
-        getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
+        //getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
     }
 
     protected void openFileChooser(ValueCallback<Uri> filePathCallback) {
-        getModule(mReactContext).startPhotoPickerIntent(filePathCallback, "");
+        //getModule(mReactContext).startPhotoPickerIntent(filePathCallback, "");
     }
 
     protected void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType, String capture) {
-        getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
+        //getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -310,7 +309,8 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
         String[] acceptTypes = fileChooserParams.getAcceptTypes();
         boolean allowMultiple = fileChooserParams.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE;
-        return getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptTypes, allowMultiple);
+        return true;
+        //return getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptTypes, allowMultiple);
     }
 
     @Override
