@@ -1,14 +1,30 @@
+import java.nio.file.Paths
+
 buildscript {
     ext.safeExtGet = {prop, fallback ->
         rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
     }
     repositories {
         google()
-    gradlePluginPortal()
+        gradlePluginPortal()
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.4")
     }
+}
+
+static def findNodeModulePath(baseDir, packageName) {
+    def basePath = baseDir.toPath().normalize()
+    // Node's module resolution algorithm searches up to the root directory,
+    // after which the base path will be null
+    while (basePath) {
+        def candidatePath = Paths.get(basePath.toString(), "node_modules", packageName)
+        if (candidatePath.toFile().exists()) {
+            return candidatePath.toString()
+        }
+        basePath = basePath.getParent()
+    }
+    return null
 }
 
 def isNewArchitectureEnabled() {
@@ -41,9 +57,10 @@ android {
     }
 }
 
+def reactNativeDir = findNodeModulePath(projectDir, "react-native")
+println reactNativeDir
 repositories {
     maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
         url "$projectDir/../node_modules/react-native/android"
     }
     mavenCentral()
