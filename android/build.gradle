@@ -9,6 +9,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${safeExtGet('kotlinVersion', '1.5.30')}")
         classpath("com.android.tools.build:gradle:7.0.4")
     }
 }
@@ -32,6 +33,7 @@ def isNewArchitectureEnabled() {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 if (isNewArchitectureEnabled()) {
     apply plugin: 'com.facebook.react'
@@ -58,10 +60,9 @@ android {
 }
 
 def reactNativeDir = findNodeModulePath(projectDir, "react-native")
-println reactNativeDir
 repositories {
     maven {
-        url "$projectDir/../node_modules/react-native/android"
+        url reactNativeDir
     }
     mavenCentral()
     google()
@@ -69,6 +70,8 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${safeExtGet('kotlinVersion', '1.5.30')}"
+    implementation "androidx.webkit:webkit:${safeExtGet('webkitVersion', '1.4.0')}"
 }
 
 if (isNewArchitectureEnabled()) {

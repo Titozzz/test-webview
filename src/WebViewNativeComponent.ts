@@ -4,6 +4,9 @@ import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNati
 
 export interface NativeProps extends ViewProps {
   color: string;
+  source: Readonly<{
+    uri: string;
+  }>
 }
 
 export default codegenNativeComponent<NativeProps>(
