@@ -75,49 +75,49 @@ public class RNCWebViewManagerImpl {
         if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
           WebView.setWebContentsDebuggingEnabled(true);
         }
-        // webView.setDownloadListener(new DownloadListener() {
-        //     public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-        //       webView.setIgnoreErrFailedForThisURL(url);
+         webView.setDownloadListener(new DownloadListener() {
+             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+               webView.setIgnoreErrFailedForThisURL(url);
       
-        //       RNCWebViewModule module = getModule(reactContext);
+               RNCWebViewModule module = getModule(reactContext);
       
-        //       DownloadManager.Request request;
-        //       try {
-        //         request = new DownloadManager.Request(Uri.parse(url));
-        //       } catch (IllegalArgumentException e) {
-        //         Log.w(TAG, "Unsupported URI, aborting download", e);
-        //         return;
-        //       }
+               DownloadManager.Request request;
+               try {
+                 request = new DownloadManager.Request(Uri.parse(url));
+               } catch (IllegalArgumentException e) {
+                 Log.w(TAG, "Unsupported URI, aborting download", e);
+                 return;
+               }
       
-        //       String fileName = URLUtil.guessFileName(url, contentDisposition, mimetype);
-        //       String downloadMessage = "Downloading " + fileName;
+               String fileName = URLUtil.guessFileName(url, contentDisposition, mimetype);
+               String downloadMessage = "Downloading " + fileName;
       
-        //       //Attempt to add cookie, if it exists
-        //       URL urlObj = null;
-        //       try {
-        //         urlObj = new URL(url);
-        //         String baseUrl = urlObj.getProtocol() + "://" + urlObj.getHost();
-        //         String cookie = CookieManager.getInstance().getCookie(baseUrl);
-        //         request.addRequestHeader("Cookie", cookie);
-        //       } catch (MalformedURLException e) {
-        //         Log.w(TAG, "Error getting cookie for DownloadManager", e);
-        //       }
+               //Attempt to add cookie, if it exists
+               URL urlObj = null;
+               try {
+                 urlObj = new URL(url);
+                 String baseUrl = urlObj.getProtocol() + "://" + urlObj.getHost();
+                 String cookie = CookieManager.getInstance().getCookie(baseUrl);
+                 request.addRequestHeader("Cookie", cookie);
+               } catch (MalformedURLException e) {
+                 Log.w(TAG, "Error getting cookie for DownloadManager", e);
+               }
       
-        //       //Finish setting up request
-        //       request.addRequestHeader("User-Agent", userAgent);
-        //       request.setTitle(fileName);
-        //       request.setDescription(downloadMessage);
-        //       request.allowScanningByMediaScanner();
-        //       request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        //       request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+               //Finish setting up request
+               request.addRequestHeader("User-Agent", userAgent);
+               request.setTitle(fileName);
+               request.setDescription(downloadMessage);
+               request.allowScanningByMediaScanner();
+               request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+               request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
       
-        //       module.setDownloadRequest(request);
+               module.setDownloadRequest(request);
       
-        //       if (module.grantFileDownloaderPermissions(getDownloadingMessageOrDefault(downloadingMessage), getLackPermissionToDownloadMessageOrDefault(lackPermissionToDownloadMessage))) {
-        //         module.downloadFile(getDownloadingMessageOrDefault(downloadingMessage));
-        //       }
-        //     }
-        //   });
+               if (module.grantFileDownloaderPermissions(getDownloadingMessageOrDefault(downloadingMessage), getLackPermissionToDownloadMessageOrDefault(lackPermissionToDownloadMessage))) {
+                 module.downloadFile(getDownloadingMessageOrDefault(downloadingMessage));
+               }
+             }
+           });
       
         return webView;
     }
@@ -226,9 +226,9 @@ public class RNCWebViewManagerImpl {
         }
     }
 
-    // public static RNCWebViewModule getModule(ThemedReactContext reactContext) {
-    //     return reactContext.getNativeModule(RNCWebViewModule.class);
-    // }
+    public static RNCWebViewModule getModule(ThemedReactContext reactContext) {
+        return reactContext.getNativeModule(RNCWebViewModule.class);
+    }
 
     public static void setMixedContentMode(WebView view, @Nullable String mixedContentMode) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

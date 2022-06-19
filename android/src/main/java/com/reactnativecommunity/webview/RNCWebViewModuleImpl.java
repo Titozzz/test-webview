@@ -42,17 +42,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static android.app.Activity.RESULT_OK;
 
-@ReactModule(name = RNCWebViewModule.MODULE_NAME)
-public class RNCWebViewModule extends ReactContextBaseJavaModule implements ActivityEventListener {
-    public static final String MODULE_NAME = "RNCWebView";
-    private static final int PICKER = 1;
-    private static final int PICKER_LEGACY = 3;
-    private static final int FILE_DOWNLOAD_PERMISSION_REQUEST = 1;
-    private ValueCallback<Uri> filePathCallbackLegacy;
-    private ValueCallback<Uri[]> filePathCallback;
-    private File outputImage;
-    private File outputVideo;
-    private DownloadManager.Request downloadRequest;
+public class RNCWebViewModuleImpl {
+    public static final String NAME = "RNCWebView";
+
+    public static final int PICKER = 1;
+    public static final int PICKER_LEGACY = 3;
+    public static final int FILE_DOWNLOAD_PERMISSION_REQUEST = 1;
 
     protected static class ShouldOverrideUrlLoadingLock {
         protected enum ShouldOverrideCallbackState {
@@ -61,22 +56,22 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
             DO_NOT_OVERRIDE,
         }
 
-        private int nextLockIdentifier = 1;
-        private final HashMap<Integer, AtomicReference<ShouldOverrideCallbackState>> shouldOverrideLocks = new HashMap<>();
+        private double nextLockIdentifier = 1;
+        private final HashMap<Double, AtomicReference<ShouldOverrideCallbackState>> shouldOverrideLocks = new HashMap<>();
 
-        public synchronized Pair<Integer, AtomicReference<ShouldOverrideCallbackState>> getNewLock() {
-            final int lockIdentifier = nextLockIdentifier++;
+        public synchronized Pair<Double, AtomicReference<ShouldOverrideCallbackState>> getNewLock() {
+            final double lockIdentifier = nextLockIdentifier++;
             final AtomicReference<ShouldOverrideCallbackState> shouldOverride = new AtomicReference<>(ShouldOverrideCallbackState.UNDECIDED);
             shouldOverrideLocks.put(lockIdentifier, shouldOverride);
             return new Pair<>(lockIdentifier, shouldOverride);
         }
 
         @Nullable
-        public synchronized AtomicReference<ShouldOverrideCallbackState> getLock(Integer lockIdentifier) {
+        public synchronized AtomicReference<ShouldOverrideCallbackState> getLock(Double lockIdentifier) {
             return shouldOverrideLocks.get(lockIdentifier);
         }
 
-        public synchronized void removeLock(Integer lockIdentifier) {
+        public synchronized void removeLock(Double lockIdentifier) {
             shouldOverrideLocks.remove(lockIdentifier);
         }
     }
@@ -95,7 +90,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         }
     }
 
-    private PermissionListener getWebviewFileDownloaderPermissionListener(String downloadingMessage, String lackPermissionToDownloadMessage) {
+    private static PermissionListener getWebviewFileDownloaderPermissionListener(String downloadingMessage, String lackPermissionToDownloadMessage, DownloadManager.Request downloadRequest, ReactApplicationContext context) {
         return new PermissionListener() {
             @Override
             public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -104,10 +99,10 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
                         // If request is cancelled, the result arrays are empty.
                         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                             if (downloadRequest != null) {
-                                downloadFile(downloadingMessage);
+                                downloadFile(downloadingMessage, downloadRequest, context);
                             }
                         } else {
-                            Toast.makeText(getCurrentActivity().getApplicationContext(), lackPermissionToDownloadMessage, Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, lackPermissionToDownloadMessage, Toast.LENGTH_LONG).show();
                         }
                         return true;
                     }
@@ -117,18 +112,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         };
     }
 
-    public RNCWebViewModule(ReactApplicationContext reactContext) {
-        super(reactContext);
-        reactContext.addActivityEventListener(this);
-    }
-
-    @Override
-    public String getName() {
-        return MODULE_NAME;
-    }
-
-    @ReactMethod
-    public void isFileUploadSupported(final Promise promise) {
+    public static boolean isFileUploadSupported() {
         Boolean result = false;
         int current = Build.VERSION.SDK_INT;
         if (current >= Build.VERSION_CODES.LOLLIPOP) {
@@ -137,11 +121,10 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         if (current >= Build.VERSION_CODES.JELLY_BEAN && current <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             result = true;
         }
-        promise.resolve(result);
+        return result;
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public void onShouldStartLoadWithRequestCallback(final boolean shouldStart, final int lockIdentifier) {
+    public static void onShouldStartLoadWithRequestCallback(boolean shouldStart, double lockIdentifier) {
         final AtomicReference<ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState> lockObject = shouldOverrideUrlLoadingLock.getLock(lockIdentifier);
         if (lockObject != null) {
             synchronized (lockObject) {
@@ -151,74 +134,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         }
     }
 
-    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-
-        if (filePathCallback == null && filePathCallbackLegacy == null) {
-            return;
-        }
-
-        boolean imageTaken = false;
-        boolean videoTaken = false;
-
-        if (outputImage != null && outputImage.length() > 0) {
-            imageTaken = true;
-        }
-        if (outputVideo != null && outputVideo.length() > 0) {
-            videoTaken = true;
-        }
-
-        // based off of which button was pressed, we get an activity result and a file
-        // the camera activity doesn't properly return the filename* (I think?) so we use
-        // this filename instead
-        switch (requestCode) {
-            case PICKER:
-                if (resultCode != RESULT_OK) {
-                    if (filePathCallback != null) {
-                        filePathCallback.onReceiveValue(null);
-                    }
-                } else {
-                    if (imageTaken) {
-                        filePathCallback.onReceiveValue(new Uri[]{getOutputUri(outputImage)});
-                    } else if (videoTaken) {
-                        filePathCallback.onReceiveValue(new Uri[]{getOutputUri(outputVideo)});
-                    } else {
-                        filePathCallback.onReceiveValue(this.getSelectedFiles(data, resultCode));
-                    }
-                }
-                break;
-            case PICKER_LEGACY:
-                if (resultCode != RESULT_OK) {
-                    filePathCallbackLegacy.onReceiveValue(null);
-                } else {
-                    if (imageTaken) {
-                        filePathCallbackLegacy.onReceiveValue(getOutputUri(outputImage));
-                    } else if (videoTaken) {
-                        filePathCallbackLegacy.onReceiveValue(getOutputUri(outputVideo));
-                    } else {
-                        filePathCallbackLegacy.onReceiveValue(data.getData());
-                    }
-                }
-                break;
-
-        }
-
-        if (outputImage != null && !imageTaken) {
-            outputImage.delete();
-        }
-        if (outputVideo != null && !videoTaken) {
-            outputVideo.delete();
-        }
-
-        filePathCallback = null;
-        filePathCallbackLegacy = null;
-        outputImage = null;
-        outputVideo = null;
-    }
-
-    public void onNewIntent(Intent intent) {
-    }
-
-    private Uri[] getSelectedFiles(Intent data, int resultCode) {
+    public static Uri[] getSelectedFiles(Intent data, int resultCode) {
         if (data == null) {
             return null;
         }
@@ -241,48 +157,44 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return null;
     }
 
-    public void startPhotoPickerIntent(ValueCallback<Uri> filePathCallback, String acceptType) {
-        filePathCallbackLegacy = filePathCallback;
-
+    public static void startPhotoPickerIntent(String acceptType, Activity activity, File outputImage, File outputVideo) {
         Intent fileChooserIntent = getFileChooserIntent(acceptType);
         Intent chooserIntent = Intent.createChooser(fileChooserIntent, "");
 
         ArrayList<Parcelable> extraIntents = new ArrayList<>();
         if (acceptsImages(acceptType)) {
-            Intent photoIntent = getPhotoIntent();
+            Intent photoIntent = getPhotoIntent(outputImage, (ReactApplicationContext) activity.getApplicationContext());
             if (photoIntent != null) {
                 extraIntents.add(photoIntent);
             }
         }
         if (acceptsVideo(acceptType)) {
-            Intent videoIntent = getVideoIntent();
+            Intent videoIntent = getVideoIntent(outputVideo, (ReactApplicationContext) activity.getApplicationContext());
             if (videoIntent != null) {
                 extraIntents.add(videoIntent);
             }
         }
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents.toArray(new Parcelable[]{}));
 
-        if (chooserIntent.resolveActivity(getCurrentActivity().getPackageManager()) != null) {
-            getCurrentActivity().startActivityForResult(chooserIntent, PICKER_LEGACY);
+        if (chooserIntent.resolveActivity(activity.getPackageManager()) != null) {
+            activity.startActivityForResult(chooserIntent, PICKER_LEGACY);
         } else {
             Log.w("RNCWebViewModule", "there is no Activity to handle this Intent");
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public boolean startPhotoPickerIntent(final ValueCallback<Uri[]> callback, final String[] acceptTypes, final boolean allowMultiple) {
-        filePathCallback = callback;
-
+    public static boolean startPhotoPickerIntent(final String[] acceptTypes, final boolean allowMultiple, Activity activity, File outputImage, File outputVideo) {
         ArrayList<Parcelable> extraIntents = new ArrayList<>();
-        if (!needsCameraPermission()) {
+        if (!needsCameraPermission(activity)) {
             if (acceptsImages(acceptTypes)) {
-                Intent photoIntent = getPhotoIntent();
+                Intent photoIntent = getPhotoIntent(outputImage, (ReactApplicationContext) activity.getApplicationContext());
                 if (photoIntent != null) {
                     extraIntents.add(photoIntent);
                 }
             }
             if (acceptsVideo(acceptTypes)) {
-                Intent videoIntent = getVideoIntent();
+                Intent videoIntent = getVideoIntent(outputVideo, (ReactApplicationContext) activity.getApplicationContext());
                 if (videoIntent != null) {
                     extraIntents.add(videoIntent);
                 }
@@ -295,8 +207,8 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         chooserIntent.putExtra(Intent.EXTRA_INTENT, fileSelectionIntent);
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents.toArray(new Parcelable[]{}));
 
-        if (chooserIntent.resolveActivity(getCurrentActivity().getPackageManager()) != null) {
-            getCurrentActivity().startActivityForResult(chooserIntent, PICKER);
+        if (chooserIntent.resolveActivity(activity.getPackageManager()) != null) {
+            activity.startActivityForResult(chooserIntent, PICKER);
         } else {
             Log.w("RNCWebViewModule", "there is no Activity to handle this Intent");
         }
@@ -304,46 +216,42 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return true;
     }
 
-    public void setDownloadRequest(DownloadManager.Request request) {
-        this.downloadRequest = request;
-    }
-
-    public void downloadFile(String downloadingMessage) {
-        DownloadManager dm = (DownloadManager) getCurrentActivity().getBaseContext().getSystemService(Context.DOWNLOAD_SERVICE);
+    public static void downloadFile(String downloadingMessage, DownloadManager.Request downloadRequest, ReactApplicationContext context) {
+        DownloadManager dm = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
 
         try {
-            dm.enqueue(this.downloadRequest);
+            dm.enqueue(downloadRequest);
         } catch (IllegalArgumentException e) {
             Log.w("RNCWebViewModule", "Unsupported URI, aborting download", e);
             return;
         }
 
-        Toast.makeText(getCurrentActivity().getApplicationContext(), downloadingMessage, Toast.LENGTH_LONG).show();
+        Toast.makeText(context, downloadingMessage, Toast.LENGTH_LONG).show();
     }
 
-    public boolean grantFileDownloaderPermissions(String downloadingMessage, String lackPermissionToDownloadMessage) {
+    public static boolean grantFileDownloaderPermissions(String downloadingMessage, String lackPermissionToDownloadMessage, DownloadManager.Request dowloadRequest, Activity activity) {
         // Permission not required for Android Q and above
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
             return true;
         }
 
-        boolean result = ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean result = ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         if (!result && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PermissionAwareActivity activity = getPermissionAwareActivity();
-            activity.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, FILE_DOWNLOAD_PERMISSION_REQUEST, getWebviewFileDownloaderPermissionListener(downloadingMessage, lackPermissionToDownloadMessage));
+            PermissionAwareActivity PAactivity = getPermissionAwareActivity(activity);
+            PAactivity.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, FILE_DOWNLOAD_PERMISSION_REQUEST, getWebviewFileDownloaderPermissionListener(downloadingMessage, lackPermissionToDownloadMessage, dowloadRequest, (ReactApplicationContext) activity.getApplicationContext()));
         }
 
         return result;
     }
 
-    protected boolean needsCameraPermission() {
+    protected static boolean needsCameraPermission(Activity activity) {
         boolean needed = false;
 
-        PackageManager packageManager = getCurrentActivity().getPackageManager();
+        PackageManager packageManager = activity.getPackageManager();
         try {
-            String[] requestedPermissions = packageManager.getPackageInfo(getReactApplicationContext().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+            String[] requestedPermissions = packageManager.getPackageInfo(activity.getApplicationContext().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
             if (Arrays.asList(requestedPermissions).contains(Manifest.permission.CAMERA)
-                    && ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    && ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 needed = true;
             }
         } catch (PackageManager.NameNotFoundException e) {
@@ -353,12 +261,12 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return needed;
     }
 
-    private Intent getPhotoIntent() {
+    public static Intent getPhotoIntent(File outputImage, ReactApplicationContext context) {
         Intent intent = null;
 
         try {
-            outputImage = getCapturedFile(MimeType.IMAGE);
-            Uri outputImageUri = getOutputUri(outputImage);
+            outputImage = getCapturedFile(MimeType.IMAGE, context);
+            Uri outputImageUri = getOutputUri(outputImage, context);
             intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outputImageUri);
         } catch (IOException | IllegalArgumentException e) {
@@ -369,12 +277,12 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return intent;
     }
 
-    private Intent getVideoIntent() {
+    public static Intent getVideoIntent(File outputVideo, ReactApplicationContext context) {
         Intent intent = null;
 
         try {
-            outputVideo = getCapturedFile(MimeType.VIDEO);
-            Uri outputVideoUri = getOutputUri(outputVideo);
+            outputVideo = getCapturedFile(MimeType.VIDEO, context);
+            Uri outputVideoUri = getOutputUri(outputVideo, context);
             intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outputVideoUri);
         } catch (IOException | IllegalArgumentException e) {
@@ -385,7 +293,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return intent;
     }
 
-    private Intent getFileChooserIntent(String acceptTypes) {
+    private static Intent getFileChooserIntent(String acceptTypes) {
         String _acceptTypes = acceptTypes;
         if (acceptTypes.isEmpty()) {
             _acceptTypes = MimeType.DEFAULT.value;
@@ -399,7 +307,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return intent;
     }
 
-    private Intent getFileChooserIntent(String[] acceptTypes, boolean allowMultiple) {
+    private static Intent getFileChooserIntent(String[] acceptTypes, boolean allowMultiple) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType(MimeType.DEFAULT.value);
@@ -408,7 +316,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return intent;
     }
 
-    private Boolean acceptsImages(String types) {
+    private static Boolean acceptsImages(String types) {
         String mimeType = types;
         if (types.matches("\\.\\w+")) {
             mimeType = getMimeTypeFromExtension(types.replace(".", ""));
@@ -416,12 +324,12 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return mimeType.isEmpty() || mimeType.toLowerCase().contains(MimeType.IMAGE.value);
     }
 
-    private Boolean acceptsImages(String[] types) {
+    private static Boolean acceptsImages(String[] types) {
         String[] mimeTypes = getAcceptedMimeType(types);
         return arrayContainsString(mimeTypes, MimeType.DEFAULT.value) || arrayContainsString(mimeTypes, MimeType.IMAGE.value);
     }
 
-    private Boolean acceptsVideo(String types) {
+    private static Boolean acceptsVideo(String types) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return false;
         }
@@ -433,7 +341,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return mimeType.isEmpty() || mimeType.toLowerCase().contains(MimeType.VIDEO.value);
     }
 
-    private Boolean acceptsVideo(String[] types) {
+    private static Boolean acceptsVideo(String[] types) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return false;
         }
@@ -442,7 +350,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return arrayContainsString(mimeTypes, MimeType.DEFAULT.value) || arrayContainsString(mimeTypes, MimeType.VIDEO.value);
     }
 
-    private Boolean arrayContainsString(String[] array, String pattern) {
+    private static Boolean arrayContainsString(String[] array, String pattern) {
         for (String content : array) {
             if (content.contains(pattern)) {
                 return true;
@@ -451,7 +359,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return false;
     }
 
-    private String[] getAcceptedMimeType(String[] types) {
+    private static String[] getAcceptedMimeType(String[] types) {
         if (noAcceptTypesSet(types)) {
             return new String[]{MimeType.DEFAULT.value};
         }
@@ -473,7 +381,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return mimeTypes;
     }
 
-    private String getMimeTypeFromExtension(String extension) {
+    private static String getMimeTypeFromExtension(String extension) {
         String type = null;
         if (extension != null) {
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
@@ -481,18 +389,18 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return type;
     }
 
-    private Uri getOutputUri(File capturedFile) {
+    public static Uri getOutputUri(File capturedFile, ReactApplicationContext context) {
         // for versions below 6.0 (23) we use the old File creation & permissions model
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return Uri.fromFile(capturedFile);
         }
 
         // for versions 6.0+ (23) we use the FileProvider to avoid runtime permissions
-        String packageName = getReactApplicationContext().getPackageName();
-        return FileProvider.getUriForFile(getReactApplicationContext(), packageName + ".fileprovider", capturedFile);
+        String packageName = context.getPackageName();
+        return FileProvider.getUriForFile(context, packageName + ".fileprovider", capturedFile);
     }
 
-    private File getCapturedFile(MimeType mimeType) throws IOException {
+    public static File getCapturedFile(MimeType mimeType, ReactApplicationContext context) throws IOException {
         String prefix = "";
         String suffix = "";
         String dir = "";
@@ -523,14 +431,14 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
             File storageDir = Environment.getExternalStoragePublicDirectory(dir);
             outputFile = new File(storageDir, filename);
         } else {
-            File storageDir = getReactApplicationContext().getExternalFilesDir(null);
+            File storageDir = context.getExternalFilesDir(null);
             outputFile = File.createTempFile(prefix, suffix, storageDir);
         }
 
         return outputFile;
     }
 
-    private Boolean noAcceptTypesSet(String[] types) {
+    private static Boolean noAcceptTypesSet(String[] types) {
         // when our array returned from getAcceptTypes() has no values set from the webview
         // i.e. <input type="file" />, without any "accept" attr
         // will be an array with one empty string element, afaik
@@ -538,8 +446,7 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule implements Acti
         return types.length == 0 || (types.length == 1 && types[0] != null && types[0].length() == 0);
     }
 
-    private PermissionAwareActivity getPermissionAwareActivity() {
-        Activity activity = getCurrentActivity();
+    private static PermissionAwareActivity getPermissionAwareActivity(Activity activity) {
         if (activity == null) {
             throw new IllegalStateException("Tried to use permissions API while not attached to an Activity.");
         } else if (!(activity instanceof PermissionAwareActivity)) {

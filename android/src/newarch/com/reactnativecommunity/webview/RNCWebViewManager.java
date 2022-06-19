@@ -1,14 +1,10 @@
 package com.reactnativecommunity.webview;
 
-import android.graphics.Color;
 import android.util.Log;
-import android.view.View;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.common.MapBuilder;
@@ -32,31 +28,6 @@ import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
 import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
 
 import java.util.Map;
-
-// class RNCWebViewManagerDelegate<T extends View, U extends BaseViewManagerInterface<T> & RNCWebViewManagerInterface<T>> extends BaseViewManagerDelegate<T, U> {
-//     public RNCWebViewManagerDelegate(U viewManager) {
-//         super(viewManager);
-//     }
-//     @Override
-//     public void setProperty(T view, String propName, @Nullable Object value) {
-//         switch (propName) {
-//             case "color":
-//                 mViewManager.setColor(view, value == null ? null : (String) value);
-//                 break;
-//             case "source":
-//                 mViewManager.setSource(view, (ReadableMap) value);
-//                 break;
-//             default:
-//                 super.setProperty(view, propName, value);
-//         }
-//     }
-// }
-
-// interface RNCWebViewManagerInterface<T extends View> {
-//     void setColor(T view, @Nullable String value);
-//     void setSource(T view, @Nullable ReadableMap value);
-// }
-
 
 @ReactModule(name = RNCWebViewManagerImpl.NAME)
 public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
@@ -108,8 +79,7 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     @Override
     protected void addEventEmitters(ThemedReactContext reactContext, RNCWebView view) {
         // Do not register default touch emitter and let WebView implementation handle touches
-        // view.setWebViewClient(new RNCWebViewClient());
-        Log.e("test", "couccou");
+        view.setWebViewClient(new RNCWebViewClient());
     }
 
     @Override

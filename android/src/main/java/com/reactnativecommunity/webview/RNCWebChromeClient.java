@@ -1,7 +1,5 @@
 package com.reactnativecommunity.webview;
 
-//import static com.reactnativecommunity.webview.RNCWebViewManagerImpl.getModule;
-
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -293,15 +291,15 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     };
 
     protected void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType) {
-        //getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
+        RNCWebViewManagerImpl.getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
     }
 
     protected void openFileChooser(ValueCallback<Uri> filePathCallback) {
-        //getModule(mReactContext).startPhotoPickerIntent(filePathCallback, "");
+        RNCWebViewManagerImpl.getModule(mReactContext).startPhotoPickerIntent(filePathCallback, "");
     }
 
     protected void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType, String capture) {
-        //getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
+        RNCWebViewManagerImpl.getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptType);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -309,8 +307,7 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
         String[] acceptTypes = fileChooserParams.getAcceptTypes();
         boolean allowMultiple = fileChooserParams.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE;
-        return true;
-        //return getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptTypes, allowMultiple);
+        return RNCWebViewManagerImpl.getModule(mReactContext).startPhotoPickerIntent(filePathCallback, acceptTypes, allowMultiple);
     }
 
     @Override

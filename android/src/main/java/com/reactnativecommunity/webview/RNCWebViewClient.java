@@ -86,22 +86,22 @@ public class RNCWebViewClient extends WebViewClient {
         final boolean isJsDebugging = ((ThemedReactContext) view.getContext()).getJavaScriptContextHolder().get() == 0;
 
         if (!isJsDebugging && rncWebView.mCatalystInstance != null) {
-            final Pair<Integer, AtomicReference<RNCWebViewModule.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState>> lock = RNCWebViewModule.shouldOverrideUrlLoadingLock.getNewLock();
-            final int lockIdentifier = lock.first;
-            final AtomicReference<RNCWebViewModule.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState> lockObject = lock.second;
+            final Pair<Double, AtomicReference<RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState>> lock = RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.getNewLock();
+            final double lockIdentifier = lock.first;
+            final AtomicReference<RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState> lockObject = lock.second;
 
             final WritableMap event = createWebViewEvent(view, url);
-            event.putInt("lockIdentifier", lockIdentifier);
+            event.putDouble("lockIdentifier", lockIdentifier);
             rncWebView.sendDirectMessage("onShouldStartLoadWithRequest", event);
 
             try {
                 assert lockObject != null;
                 synchronized (lockObject) {
                     final long startTime = SystemClock.elapsedRealtime();
-                    while (lockObject.get() == RNCWebViewModule.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState.UNDECIDED) {
+                    while (lockObject.get() == RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState.UNDECIDED) {
                         if (SystemClock.elapsedRealtime() - startTime > SHOULD_OVERRIDE_URL_LOADING_TIMEOUT) {
                             FLog.w(TAG, "Did not receive response to shouldOverrideUrlLoading in time, defaulting to allow loading.");
-                            RNCWebViewModule.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
+                            RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
                             return false;
                         }
                         lockObject.wait(SHOULD_OVERRIDE_URL_LOADING_TIMEOUT);
@@ -109,12 +109,12 @@ public class RNCWebViewClient extends WebViewClient {
                 }
             } catch (InterruptedException e) {
                 FLog.e(TAG, "shouldOverrideUrlLoading was interrupted while waiting for result.", e);
-                RNCWebViewModule.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
+                RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
                 return false;
             }
 
-            final boolean shouldOverride = lockObject.get() == RNCWebViewModule.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState.SHOULD_OVERRIDE;
-            RNCWebViewModule.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
+            final boolean shouldOverride = lockObject.get() == RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState.SHOULD_OVERRIDE;
+            RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
 
             return shouldOverride;
         } else {
