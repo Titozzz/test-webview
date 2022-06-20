@@ -34,15 +34,11 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
         implements RNCWebViewManagerInterface<RNCWebView> {
 
     private final ViewManagerDelegate<RNCWebView> mDelegate;
-    protected RNCWebViewConfig mWebViewConfig;
-    protected boolean mAllowsFullscreenVideo = false;
-    protected @Nullable String mDownloadingMessage = null;
-    protected @Nullable String mLackPermissionToDownloadMessage = null;
+    private @Nullable RNCWebViewManagerImpl mRNCWebViewManagerImpl;
 
     public RNCWebViewManager(ReactApplicationContext context) {
-        mWebViewConfig = webView -> {
-        };
         mDelegate = new RNCWebViewManagerDelegate(this);
+        mRNCWebViewManagerImpl = new RNCWebViewManagerImpl(context);
     }
 
     @Nullable
@@ -54,26 +50,26 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     @NonNull
     @Override
     public String getName() {
-        String test = RNCWebViewManagerImpl.NAME;
         return RNCWebViewManagerImpl.NAME;
     }
 
     @NonNull
     @Override
     protected RNCWebView createViewInstance(@NonNull ThemedReactContext context) {
-        return RNCWebViewManagerImpl.createViewInstance(context, mWebViewConfig, mDownloadingMessage, mLackPermissionToDownloadMessage, mAllowsFullscreenVideo);
-    }
-
-    @Override
-    @ReactProp(name = "color")
-    public void setColor(RNCWebView view, @Nullable String color) {
-        RNCWebViewManagerImpl.setColor(view, color);
+        return mRNCWebViewManagerImpl.createViewInstance();
     }
 
     @Override
     @ReactProp(name = "source")
     public void setSource(RNCWebView view, @Nullable ReadableMap value) {
-        RNCWebViewManagerImpl.setSource(view, value);
+        mRNCWebViewManagerImpl.setSource(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "messagingModuleName")
+    public void setMessagingModuleName(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setMessagingModuleName(view, value);
+
     }
 
     @Override

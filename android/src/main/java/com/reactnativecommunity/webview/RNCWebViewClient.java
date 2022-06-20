@@ -20,6 +20,7 @@ import androidx.core.util.Pair;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -42,13 +43,13 @@ public class RNCWebViewClient extends WebViewClient {
     ReadableArray mUrlPrefixesForDefaultIntent;
     protected RNCWebView.ProgressChangedFilter progressChangedFilter = null;
     protected @Nullable String ignoreErrFailedForThisURL = null;
-    protected @Nullable BasicAuthCredential basicAuthCredential = null;
+    protected @Nullable RNCBasicAuthCredential basicAuthCredential = null;
 
     public void setIgnoreErrFailedForThisURL(@Nullable String url) {
         ignoreErrFailedForThisURL = url;
     }
 
-    public void setBasicAuthCredential(@Nullable BasicAuthCredential credential) {
+    public void setBasicAuthCredential(@Nullable RNCBasicAuthCredential credential) {
         basicAuthCredential = credential;
     }
 
@@ -72,18 +73,17 @@ public class RNCWebViewClient extends WebViewClient {
 
         RNCWebView reactWebView = (RNCWebView) webView;
         reactWebView.callInjectedJavaScriptBeforeContentLoaded();
+        int reactTag = webView.getId();
 
-        ((RNCWebView) webView).dispatchEvent(
-                webView,
-                new TopLoadingStartEvent(
-                        webView.getId(),
-                        createWebViewEvent(webView, url)));
+        UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopLoadingStartEvent(
+            webView.getId(),
+            createWebViewEvent(webView, url)));
     }
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         final RNCWebView rncWebView = (RNCWebView) view;
-        final boolean isJsDebugging = ((ThemedReactContext) view.getContext()).getJavaScriptContextHolder().get() == 0;
+        final boolean isJsDebugging = ((ReactContext) view.getContext()).getJavaScriptContextHolder().get() == 0;
 
         if (!isJsDebugging && rncWebView.mCatalystInstance != null) {
             final Pair<Double, AtomicReference<RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState>> lock = RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.getNewLock();
@@ -120,11 +120,11 @@ public class RNCWebViewClient extends WebViewClient {
         } else {
             FLog.w(TAG, "Couldn't use blocking synchronous call for onShouldStartLoadWithRequest due to debugging or missing Catalyst instance, falling back to old event-and-load.");
             progressChangedFilter.setWaitingForCommandLoadUrl(true);
-            ((RNCWebView) view).dispatchEvent(
-                    view,
-                    new TopShouldStartLoadWithRequestEvent(
-                            view.getId(),
-                            createWebViewEvent(view, url)));
+
+            int reactTag = view.getId();
+            UIManagerHelper.getEventDispatcherForReactTag((ReactContext) view.getContext(), reactTag).dispatchEvent(new TopShouldStartLoadWithRequestEvent(
+                    reactTag,
+                    createWebViewEvent(view, url)));
             return true;
         }
     }
@@ -236,9 +236,8 @@ public class RNCWebViewClient extends WebViewClient {
         eventData.putDouble("code", errorCode);
         eventData.putString("description", description);
 
-        ((RNCWebView) webView).dispatchEvent(
-                webView,
-                new TopLoadingErrorEvent(webView.getId(), eventData));
+        int reactTag = webView.getId();
+        UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopLoadingErrorEvent(webView.getId(), eventData));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -254,9 +253,8 @@ public class RNCWebViewClient extends WebViewClient {
             eventData.putInt("statusCode", errorResponse.getStatusCode());
             eventData.putString("description", errorResponse.getReasonPhrase());
 
-            ((RNCWebView) webView).dispatchEvent(
-                    webView,
-                    new TopHttpErrorEvent(webView.getId(), eventData));
+            int reactTag = webView.getId();
+            UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopHttpErrorEvent(webView.getId(), eventData));
         }
     }
 
@@ -285,11 +283,8 @@ public class RNCWebViewClient extends WebViewClient {
 
         WritableMap event = createWebViewEvent(webView, webView.getUrl());
         event.putBoolean("didCrash", detail.didCrash());
-
-        ((RNCWebView) webView).dispatchEvent(
-                webView,
-                new TopRenderProcessGoneEvent(webView.getId(), event)
-        );
+        int reactTag = webView.getId();
+        UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopRenderProcessGoneEvent(webView.getId(), event));
 
         // returning false would crash the app.
         return true;
@@ -297,7 +292,7 @@ public class RNCWebViewClient extends WebViewClient {
 
     protected void emitFinishEvent(WebView webView, String url) {
         int reactTag = webView.getId();
-        UIManagerHelper.getEventDispatcher((ThemedReactContext)webView.getContext(), reactTag).dispatchEvent(new TopLoadingFinishEvent(webView.getId(), createWebViewEvent(webView, url)));
+        UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopLoadingFinishEvent(webView.getId(), createWebViewEvent(webView, url)));
     }
 
     protected WritableMap createWebViewEvent(WebView webView, String url) {

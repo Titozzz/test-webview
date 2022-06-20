@@ -18,10 +18,10 @@ import android.webkit.WebViewClient;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.CatalystInstance;
 import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
-import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.ContentSizeChangeEvent;
 import com.facebook.react.uimanager.events.Event;
@@ -67,7 +67,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
      * Activity Context is required for creation of dialogs internally by WebView
      * Reactive Native needed for access to ReactNative internal system functionality
      */
-    public RNCWebView(ThemedReactContext reactContext) {
+    public RNCWebView(ReactApplicationContext reactContext) {
         super(reactContext);
         this.createCatalystInstance();
         progressChangedFilter = new ProgressChangedFilter();
@@ -77,7 +77,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
         mRNCWebViewClient.setIgnoreErrFailedForThisURL(url);
     }
 
-    public void setBasicAuthCredential(BasicAuthCredential credential) {
+    public void setBasicAuthCredential(RNCBasicAuthCredential credential) {
         mRNCWebViewClient.setBasicAuthCredential(credential);
     }
 
@@ -181,7 +181,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
     }
 
     protected void createCatalystInstance() {
-        ThemedReactContext reactContext = (ThemedReactContext) this.getContext();
+        ReactApplicationContext reactContext = (ReactApplicationContext) this.getContext();
 
         if (reactContext != null) {
             mCatalystInstance = reactContext.getCatalystInstance();
@@ -238,7 +238,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
     }
 
     public void onMessage(String message) {
-        ThemedReactContext reactContext = (ThemedReactContext) this.getContext();
+        ReactApplicationContext reactContext = (ReactApplicationContext) this.getContext();
         RNCWebView mContext = this;
 
         if (mRNCWebViewClient != null) {
@@ -310,7 +310,7 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
     }
 
     protected void dispatchEvent(WebView webView, Event event) {
-        ThemedReactContext reactContext = (ThemedReactContext) webView.getContext();
+        ReactApplicationContext reactContext = (ReactApplicationContext) webView.getContext();
         EventDispatcher eventDispatcher =
                 reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
         eventDispatcher.dispatchEvent(event);

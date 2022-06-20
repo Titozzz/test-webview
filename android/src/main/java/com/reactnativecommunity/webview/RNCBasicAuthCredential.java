@@ -1,10 +1,10 @@
 package com.reactnativecommunity.webview;
 
-class BasicAuthCredential {
+class RNCBasicAuthCredential {
     String username;
     String password;
 
-    BasicAuthCredential(String username, String password) {
+    RNCBasicAuthCredential(String username, String password) {
         this.username = username;
         this.password = password;
     }
