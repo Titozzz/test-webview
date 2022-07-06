@@ -2,7 +2,6 @@ import type { ViewProps } from 'ViewPropTypes';
 import type { HostComponent } from 'react-native';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 import {DirectEventHandler,Double, Int32} from 'react-native/Libraries/Types/CodegenTypes';
-import {ScrollEvent} from 'react-native/Libraries/Types/CoreEventTypes';
 
 export type WebViewNativeEvent = Readonly<{
   url: string;
@@ -124,35 +123,79 @@ type WebViewRenderProcessGoneEvent = Readonly<{
   didCrash: boolean;
 }>
 
+type WebViewDownloadEvent = Readonly<{
+  downloadUrl: boolean;
+}>
+
 export interface NativeProps extends ViewProps {
   // Android only
   allowFileAccess?: boolean;
-  // Android only
-  allowFileAccessFromFileURLs?: boolean;
-  // Android only
-  allowUniversalAccessFromFileURLs?: boolean;
-  // Android only
+
   allowsFullscreenVideo?: boolean;
-  // Android only
   androidHardwareAccelerationDisabled?: boolean;
-  // Android only
   androidLayerType?: string;
+  cacheMode?: string;
+  domStorageEnabled?: boolean;
+  downloadingMessage?: string;
+  forceDarkOn?: boolean;
+  geolocationEnabled?: boolean;
+  lackPermissionToDownloadMessage?: string;
+  messagingModuleName: string;
+  minimumFontSize?: Int32;
+  mixedContentMode?: string;
+  nestedScrollEnabled?: boolean;
+  onContentSizeChange?: DirectEventHandler<WebViewNativeEvent>;
+  onRenderProcessGone?: DirectEventHandler<WebViewRenderProcessGoneEvent>;
+  overScrollMode?: string;
+  saveFormDataDisabled?: boolean;
+  scalesPageToFit?: boolean;
+  setBuiltInZoomControls?: boolean;
+  setDisplayZoomControls?: boolean;
+  setSupportMultipleWindows?: boolean;
+  textZoom?: Double;
+  thirdPartyCookiesEnabled?: boolean;
+  urlPrefixesForDefaultIntent?: readonly string[];
+  // !Android only
+
+  // iOS only
+  allowingReadAccessToURL?: string;
+  allowsBackForwardNavigationGestures?: boolean;
+  allowsInlineMediaPlayback?: boolean;
+  allowsAirPlayForMediaPlayback?: boolean;
+  allowsLinkPreview?: boolean;
+  automaticallyAdjustContentInsets?: boolean;
+  autoManageStatusBarEnabled?: boolean;
+  bounces?: boolean;
+  contentInset?: Readonly<{
+    top?: Double;
+    left?: Double;
+    bottom?: Double;
+    right?: Double;
+  }>;
+  contentInsetAdjustmentBehavior?: string;
+  contentMode?: string;
+  dataDetectorTypes?: readonly string[];
+  decelerationRate?: number;
+  directionalLockEnabled?: boolean;
+  hideKeyboardAccessoryView?: boolean;
+  pagingEnabled?: boolean;
+  scrollEnabled?: boolean;
+  useSharedProcessPool?: boolean;
+  onContentProcessDidTerminate?: DirectEventHandler<WebViewNativeEvent>;
+  onFileDownload?: DirectEventHandler<WebViewDownloadEvent>;
+  limitsNavigationsToAppBoundDomains?: boolean;
+  textInteractionEnabled?: boolean;
+  mediaCapturePermissionGrantType?: string;
+  // !iOS only
+  
+  allowFileAccessFromFileURLs?: boolean;
+  allowUniversalAccessFromFileURLs?: boolean;
   applicationNameForUserAgent?: string;
   basicAuthCredential?: Readonly<{
     username: string;
     password: string;
   }>;
   cacheEnabled?: boolean;
-  // Android only
-  cacheMode?: string;
-  // Android only
-  domStorageEnabled?: boolean;
-  // Android only
-  downloadingMessage?: string;
-  // Android only
-  forceDarkOn?: boolean;
-  // Android only
-  geolocationEnabled?: boolean;
   hasOnScroll?: boolean;
   incognito?: boolean;
   injectedJavaScript?: string;
@@ -161,51 +204,19 @@ export interface NativeProps extends ViewProps {
   injectedJavaScriptBeforeContentLoadedForMainFrameOnly?: boolean;
   javaScriptCanOpenWindowsAutomatically?: boolean;
   javaScriptEnabled?: boolean;
-  // Android only
-  lackPermissionToDownloadMessage?: string;
   mediaPlaybackRequiresUserAction?: boolean;
   messagingEnabled: boolean;
-  // Android only
-  messagingModuleName: string;
-  // Android only
-  minimumFontSize?: Int32;
-  // Android only
-  mixedContentMode?: string;
-  // Android only
-  nestedScrollEnabled?: boolean;
-  // Android only
-  onContentSizeChange?: DirectEventHandler<WebViewNativeEvent>;
   onLoadingError: DirectEventHandler<WebViewErrorEvent>;
   onLoadingFinish: DirectEventHandler<WebViewNavigationEvent>;
   onLoadingProgress: DirectEventHandler<WebViewNativeProgressEvent>;
   onLoadingStart: DirectEventHandler<WebViewNavigationEvent>;
   onHttpError: DirectEventHandler<WebViewHttpErrorEvent>;
   onMessage: DirectEventHandler<WebViewMessageEvent>;
-  // Android only
-  onRenderProcessGone?: DirectEventHandler<WebViewRenderProcessGoneEvent>;
   onScroll?: DirectEventHandler<ScrollEvent>;
   onShouldStartLoadWithRequest: DirectEventHandler<ShouldStartLoadRequestEvent>;
-  // Android only
-  overScrollMode?: string;
-  // Android only
-  saveFormDataDisabled?: boolean;
-  // Android only
-  scalesPageToFit?: boolean;
-  // Android only
-  setBuiltInZoomControls?: boolean;
-  // Android only
-  setDisplayZoomControls?: boolean;
-  // Android only
-  setSupportMultipleWindows?: boolean;
   showsHorizontalScrollIndicator?: boolean;
   showsVerticalScrollIndicator?: boolean;
   source: Readonly<{uri: string}>;
-  // Android only
-  textZoom?: Double;
-  // Android only
-  thirdPartyCookiesEnabled?: boolean;
-  // Android only
-  urlPrefixesForDefaultIntent?: readonly string[];
   userAgent?: string;
 }
 
