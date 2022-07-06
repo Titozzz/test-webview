@@ -39,7 +39,6 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     protected static final FrameLayout.LayoutParams FULLSCREEN_LAYOUT_PARAMS = new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER);
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     protected static final int FULLSCREEN_SYSTEM_UI_VISIBILITY = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
             View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
@@ -123,7 +122,6 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
         UIManagerHelper.getEventDispatcherForReactTag(this.mReactContext, reactTag).dispatchEvent(new TopLoadingProgressEvent(UIManagerHelper.getSurfaceId(this.mReactContext), webView.getId(), event));
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onPermissionRequest(final PermissionRequest request) {
 
@@ -222,7 +220,6 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     }
 
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private PermissionListener webviewPermissionsListener = (requestCode, permissions, grantResults) -> {
 
         permissionsRequestShown = false;
@@ -302,7 +299,6 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
         mReactContext.getNativeModule(RNCWebViewModule.class).startPhotoPickerIntent(filePathCallback, acceptType);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
         String[] acceptTypes = fileChooserParams.getAcceptTypes();
@@ -313,7 +309,7 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
 
     @Override
     public void onHostResume() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mVideoView != null && mVideoView.getSystemUiVisibility() != FULLSCREEN_SYSTEM_UI_VISIBILITY) {
+        if (mVideoView != null && mVideoView.getSystemUiVisibility() != FULLSCREEN_SYSTEM_UI_VISIBILITY) {
             mVideoView.setSystemUiVisibility(FULLSCREEN_SYSTEM_UI_VISIBILITY);
         }
     }
@@ -325,7 +321,7 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     public void onHostDestroy() { }
 
     protected ViewGroup getRootView() {
-        return (ViewGroup) mReactContext.getCurrentActivity().findViewById(android.R.id.content);
+        return mReactContext.getCurrentActivity().findViewById(android.R.id.content);
     }
 
     public void setProgressChangedFilter(RNCWebView.ProgressChangedFilter filter) {
