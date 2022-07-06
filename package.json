@@ -28,7 +28,7 @@
     },
     "homepage": "https://github.com/<your_github_handle>/example-component#readme",
     "devDependencies": {
-        "@types/react-native": "^0.67.8"
+        "@types/react-native": "^0.69.0"
     },
     "peerDependencies": {
         "react": "*",
@@ -37,10 +37,13 @@
     "codegenConfig": {
         "libraries": [
             {
-            "name": "RNCWebViewSpec",
-            "type": "components",
-            "jsSrcsDir": "src"
+                "name": "RNCWebViewSpec",
+                "type": "components",
+                "jsSrcsDir": "src"
             }
         ]
+    },
+    "dependencies": {
+        "escape-string-regexp": "^5.0.0"
     }
 }
