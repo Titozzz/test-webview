@@ -52,7 +52,6 @@ android {
         main {
             if (isNewArchitectureEnabled()) {
                 java.srcDirs += ['src/newarch']
-                //java.srcDirs += ['/Users/thibault/Documents/GitHub/NewArchitecture/node_modules/react-native-webview/android/build/generated/source/codegen/java']
             } else {
                 java.srcDirs += ['src/oldarch']
             }

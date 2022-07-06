@@ -120,8 +120,40 @@ type ScrollEvent = Readonly<{
   responderIgnoreScroll?: boolean,
 }>
 
+type WebViewRenderProcessGoneEvent = Readonly<{
+  didCrash: boolean;
+}>
+
 export interface NativeProps extends ViewProps {
+  // Android only
+  allowFileAccess?: boolean;
+  // Android only
+  allowFileAccessFromFileURLs?: boolean;
+  // Android only
+  allowUniversalAccessFromFileURLs?: boolean;
+  // Android only
+  allowsFullscreenVideo?: boolean;
+  // Android only
+  androidHardwareAccelerationDisabled?: boolean;
+  // Android only
+  androidLayerType?: string;
+  applicationNameForUserAgent?: string;
+  basicAuthCredential?: Readonly<{
+    username: string;
+    password: string;
+  }>;
   cacheEnabled?: boolean;
+  // Android only
+  cacheMode?: string;
+  // Android only
+  domStorageEnabled?: boolean;
+  // Android only
+  downloadingMessage?: string;
+  // Android only
+  forceDarkOn?: boolean;
+  // Android only
+  geolocationEnabled?: boolean;
+  hasOnScroll?: boolean;
   incognito?: boolean;
   injectedJavaScript?: string;
   injectedJavaScriptBeforeContentLoaded?: string;
@@ -129,34 +161,53 @@ export interface NativeProps extends ViewProps {
   injectedJavaScriptBeforeContentLoadedForMainFrameOnly?: boolean;
   javaScriptCanOpenWindowsAutomatically?: boolean;
   javaScriptEnabled?: boolean;
+  // Android only
+  lackPermissionToDownloadMessage?: string;
   mediaPlaybackRequiresUserAction?: boolean;
   messagingEnabled: boolean;
+  // Android only
   messagingModuleName: string;
-
-  hasOnScroll?: boolean;
-  onScroll?: DirectEventHandler<ScrollEvent>;
+  // Android only
+  minimumFontSize?: Int32;
+  // Android only
+  mixedContentMode?: string;
+  // Android only
+  nestedScrollEnabled?: boolean;
+  // Android only
+  onContentSizeChange?: DirectEventHandler<WebViewNativeEvent>;
   onLoadingError: DirectEventHandler<WebViewErrorEvent>;
   onLoadingFinish: DirectEventHandler<WebViewNavigationEvent>;
   onLoadingProgress: DirectEventHandler<WebViewNativeProgressEvent>;
   onLoadingStart: DirectEventHandler<WebViewNavigationEvent>;
   onHttpError: DirectEventHandler<WebViewHttpErrorEvent>;
   onMessage: DirectEventHandler<WebViewMessageEvent>;
+  // Android only
+  onRenderProcessGone?: DirectEventHandler<WebViewRenderProcessGoneEvent>;
+  onScroll?: DirectEventHandler<ScrollEvent>;
   onShouldStartLoadWithRequest: DirectEventHandler<ShouldStartLoadRequestEvent>;
-
+  // Android only
+  overScrollMode?: string;
+  // Android only
+  saveFormDataDisabled?: boolean;
+  // Android only
+  scalesPageToFit?: boolean;
+  // Android only
+  setBuiltInZoomControls?: boolean;
+  // Android only
+  setDisplayZoomControls?: boolean;
+  // Android only
+  setSupportMultipleWindows?: boolean;
   showsHorizontalScrollIndicator?: boolean;
   showsVerticalScrollIndicator?: boolean;
-  // TODO: find a better way to type this.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   source: Readonly<{uri: string}>;
+  // Android only
+  textZoom?: Double;
+  // Android only
+  thirdPartyCookiesEnabled?: boolean;
+  // Android only
+  urlPrefixesForDefaultIntent?: readonly string[];
   userAgent?: string;
-  /**
-   * Append to the existing user-agent. Overridden if `userAgent` is set.
-   */
-  applicationNameForUserAgent?: string;
-  basicAuthCredential?: Readonly<{
-    username: string;
-    password: string;
-  }>;}
+}
 
 export default codegenNativeComponent<NativeProps>(
   'RNCWebView'

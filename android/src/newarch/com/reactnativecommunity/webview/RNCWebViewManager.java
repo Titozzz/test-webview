@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.module.annotations.ReactModule;
@@ -56,6 +57,43 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     }
 
     @Override
+    @ReactProp(name = "allowFileAccess")
+    public void setAllowFileAccess(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setAllowFileAccess(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "allowFileAccessFromFileURLs")
+    public void setAllowFileAccessFromFileURLs(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setAllowFileAccessFromFileURLs(view, value);
+
+    }
+
+    @Override
+    @ReactProp(name = "allowUniversalAccessFromFileURLs")
+    public void setAllowUniversalAccessFromFileURLs(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setAllowUniversalAccessFromFileURLs(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "allowsFullscreenVideo")
+    public void setAllowsFullscreenVideo(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setAllowsFullscreenVideo(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "androidHardwareAccelerationDisabled")
+    public void setAndroidHardwareAccelerationDisabled(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setAndroidHardwareAccelerationDisabled(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "androidLayerType")
+    public void setAndroidLayerType(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setAndroidLayerType(view, value);
+    }
+
+    @Override
     @ReactProp(name = "applicationNameForUserAgent")
     public void setApplicationNameForUserAgent(RNCWebView view, @Nullable String value) {
         mRNCWebViewManagerImpl.setApplicationNameForUserAgent(view, value);
@@ -74,9 +112,39 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     }
 
     @Override
+    @ReactProp(name = "cacheMode")
+    public void setCacheMode(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setCacheMode(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "domStorageEnabled")
+    public void setDomStorageEnabled(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setDomStorageEnabled(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "downloadingMessage")
+    public void setDownloadingMessage(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setDownloadingMessage(value);
+    }
+
+    @Override
+    @ReactProp(name = "forceDarkOn")
+    public void setForceDarkOn(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setForceDarkOn(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "geolocationEnabled")
+    public void setGeolocationEnabled(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setGeolocationEnabled(view, value);
+    }
+
+    @Override
     @ReactProp(name = "hasOnScroll")
     public void setHasOnScroll(RNCWebView view, boolean hasScrollEvent) {
-        mRNCWebViewManagerImpl.setHasScrollEvent(view, hasScrollEvent);
+        mRNCWebViewManagerImpl.setHasOnScroll(view, hasScrollEvent);
     }
 
     @Override
@@ -115,12 +183,17 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     @ReactProp(name = "javaScriptCanOpenWindowsAutomatically")
     public void setJavaScriptCanOpenWindowsAutomatically(RNCWebView view, boolean value) {
         mRNCWebViewManagerImpl.setJavaScriptCanOpenWindowsAutomatically(view, value);
-
     }
 
     @ReactProp(name = "javaScriptEnabled")
     public void setJavaScriptEnabled(RNCWebView view, boolean enabled) {
         mRNCWebViewManagerImpl.setJavaScriptEnabled(view, enabled);
+    }
+
+    @Override
+    @ReactProp(name = "lackPermissionToDownloadMessage")
+    public void setLackPermissionToDownloadMessage(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setLackPermissionToDownloadMessage(value);
     }
 
     @Override
@@ -139,7 +212,60 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     @ReactProp(name = "messagingModuleName")
     public void setMessagingModuleName(RNCWebView view, @Nullable String value) {
         mRNCWebViewManagerImpl.setMessagingModuleName(view, value);
+    }
 
+    @Override
+    @ReactProp(name = "minimumFontSize")
+    public void setMinimumFontSize(RNCWebView view, int value) {
+        mRNCWebViewManagerImpl.setMinimumFontSize(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "mixedContentMode")
+    public void setMixedContentMode(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setMixedContentMode(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "nestedScrollEnabled")
+    public void setNestedScrollEnabled(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setNestedScrollEnabled(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "overScrollMode")
+    public void setOverScrollMode(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setOverScrollMode(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "saveFormDataDisabled")
+    public void setSaveFormDataDisabled(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setSaveFormDataDisabled(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "scalesPageToFit")
+    public void setScalesPageToFit(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setScalesPageToFit(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "setBuiltInZoomControls")
+    public void setSetBuiltInZoomControls(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setSetBuiltInZoomControls(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "setDisplayZoomControls")
+    public void setSetDisplayZoomControls(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setSetDisplayZoomControls(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "setSupportMultipleWindows")
+    public void setSetSupportMultipleWindows(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setSetSupportMultipleWindows(view, value);
     }
 
     @Override
@@ -159,7 +285,25 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     public void setSource(RNCWebView view, @Nullable ReadableMap value) {
         mRNCWebViewManagerImpl.setSource(view, value);
     }
-    
+
+    @Override
+    @ReactProp(name = "textZoom")
+    public void setTextZoom(RNCWebView view, int value) {
+        mRNCWebViewManagerImpl.setTextZoom(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "thirdPartyCookiesEnabled")
+    public void setThirdPartyCookiesEnabled(RNCWebView view, boolean value) {
+        mRNCWebViewManagerImpl.setThirdPartyCookiesEnabled(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "urlPrefixesForDefaultIntent")
+    public void setUrlPrefixesForDefaultIntent(RNCWebView view, @Nullable ReadableArray value) {
+        mRNCWebViewManagerImpl.setUrlPrefixesForDefaultIntent(view, value);
+    }
+
     @Override
     @ReactProp(name = "userAgent")
     public void setUserAgent(RNCWebView view, @Nullable String value) {

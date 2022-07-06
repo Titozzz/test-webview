@@ -6,13 +6,17 @@ import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.*
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.build.ReactBuildConfig
 import java.io.UnsupportedEncodingException
@@ -50,9 +54,9 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
 
     private var mContext: ReactApplicationContext = context
 
-    fun createViewInstance(): RNCWebView? {
+    fun createViewInstance(): RNCWebView {
         val webView = RNCWebView(mContext)
-        setupWebChromeClient(mContext, webView, mAllowsFullscreenVideo)
+        setupWebChromeClient(mContext, webView)
         mContext.addLifecycleEventListener(webView)
         mWebViewConfig.configWebView(webView)
         val settings = webView.settings
@@ -121,10 +125,9 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
     private fun setupWebChromeClient(
         reactContext: ReactApplicationContext,
         webView: RNCWebView,
-        allowsFullscreenVideo: Boolean
     ) {
         val activity = reactContext.currentActivity
-        if (allowsFullscreenVideo && activity != null) {
+        if (mAllowsFullscreenVideo && activity != null) {
             val initialRequestedOrientation = activity.requestedOrientation
             val webChromeClient: RNCWebChromeClient =
                 object : RNCWebChromeClient(reactContext, webView) {
@@ -331,7 +334,7 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
         view.loadUrl(BLANK_URL)
     }
 
-    fun setMessagingModuleName(view: RNCWebView, value: String) {
+    fun setMessagingModuleName(view: RNCWebView, value: String?) {
         view.messagingModuleName = value
     }
 
@@ -370,11 +373,11 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
         view.settings.saveFormData = false;
     }
 
-    fun setInjectedJavaScript(view: RNCWebView, injectedJavaScript: String) {
+    fun setInjectedJavaScript(view: RNCWebView, injectedJavaScript: String?) {
         view.injectedJS = injectedJavaScript
     }
 
-    fun setInjectedJavaScriptBeforeContentLoaded(view: RNCWebView, value: String) {
+    fun setInjectedJavaScriptBeforeContentLoaded(view: RNCWebView, value: String?) {
         view.injectedJSBeforeContentLoaded = value
     }
 
@@ -406,7 +409,7 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
         view.settings.mediaPlaybackRequiresUserGesture = value
     }
 
-    fun setHasScrollEvent(view: RNCWebView, value: Boolean) {
+    fun setHasOnScroll(view: RNCWebView, value: Boolean) {
         view.setHasScrollEvent(value)
     }
 
@@ -414,4 +417,133 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
         view.settings.javaScriptEnabled = enabled
     }
 
+    fun setAllowFileAccess(view: RNCWebView, allowFileAccess: Boolean) {
+        view.settings.allowFileAccess = allowFileAccess;
+    }
+
+    fun setAllowFileAccessFromFileURLs(view: RNCWebView, value: Boolean) {
+        view.settings.allowFileAccessFromFileURLs = value;
+    }
+
+    fun setAllowsFullscreenVideo(view: RNCWebView, value: Boolean) {
+        mAllowsFullscreenVideo = value
+        setupWebChromeClient(mContext, view)
+    }
+
+    fun setAndroidHardwareAccelerationDisabled(view: RNCWebView, disabled: Boolean) {
+        if (disabled) {
+            view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+    }
+
+    fun setAndroidLayerType(view: RNCWebView, layerTypeString: String?) {
+        val layerType = when (layerTypeString) {
+            "hardware" -> View.LAYER_TYPE_HARDWARE
+            "software" -> View.LAYER_TYPE_SOFTWARE
+            else -> View.LAYER_TYPE_NONE
+        }
+        view.setLayerType(layerType, null)
+    }
+
+    fun setCacheMode(view: RNCWebView, cacheModeString: String?) {
+        view.settings.cacheMode = when (cacheModeString) {
+            "LOAD_CACHE_ONLY" -> WebSettings.LOAD_CACHE_ONLY
+            "LOAD_CACHE_ELSE_NETWORK" -> WebSettings.LOAD_CACHE_ELSE_NETWORK
+            "LOAD_NO_CACHE" -> WebSettings.LOAD_NO_CACHE
+            "LOAD_DEFAULT" -> WebSettings.LOAD_DEFAULT
+            else -> WebSettings.LOAD_DEFAULT
+        }
+    }
+
+    fun setDomStorageEnabled(view: RNCWebView, value: Boolean) {
+        view.settings.domStorageEnabled = value
+    }
+
+    fun setDownloadingMessage(value: String?) {
+        mDownloadingMessage = value
+    }
+
+    fun setForceDarkOn(view: RNCWebView, enabled: Boolean) {
+        // Only Android 10+ support dark mode
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                val forceDarkMode =
+                    if (enabled) WebSettingsCompat.FORCE_DARK_ON else WebSettingsCompat.FORCE_DARK_OFF
+                WebSettingsCompat.setForceDark(view.settings, forceDarkMode)
+            }
+
+            // Set how WebView content should be darkened.
+            // PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING:  checks for the "color-scheme" <meta> tag.
+            // If present, it uses media queries. If absent, it applies user-agent (automatic)
+            // More information about Force Dark Strategy can be found here:
+            // https://developer.android.com/reference/androidx/webkit/WebSettingsCompat#setForceDarkStrategy(android.webkit.WebSettings)
+            if (enabled && WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
+                WebSettingsCompat.setForceDarkStrategy(
+                    view.settings,
+                    WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+                )
+            }
+        }
+    }
+
+    fun setGeolocationEnabled(view: RNCWebView, value: Boolean) {
+        view.settings.setGeolocationEnabled(value)
+    }
+
+    fun setLackPermissionToDownloadMessage(value: String?) {
+        mLackPermissionToDownloadMessage = value
+    }
+
+    fun setMinimumFontSize(view: RNCWebView, value: Int) {
+        view.settings.minimumFontSize = value
+    }
+
+    fun setNestedScrollEnabled(view: RNCWebView, value: Boolean) {
+        view.nestedScrollEnabled = value
+    }
+
+    fun setOverScrollMode(view: RNCWebView, overScrollModeString: String?) {
+        view.overScrollMode = when (overScrollModeString) {
+            "never" -> View.OVER_SCROLL_NEVER
+            "content" -> View.OVER_SCROLL_IF_CONTENT_SCROLLS
+            "always" -> View.OVER_SCROLL_ALWAYS
+            else -> View.OVER_SCROLL_ALWAYS
+        }
+    }
+
+    fun setSaveFormDataDisabled(view: RNCWebView, disabled: Boolean) {
+        view.settings.saveFormData = !disabled
+    }
+
+    fun setScalesPageToFit(view: RNCWebView, value: Boolean) {
+        view.settings.loadWithOverviewMode = value
+        view.settings.useWideViewPort = value
+    }
+
+    fun setSetBuiltInZoomControls(view: RNCWebView, value: Boolean) {
+        view.settings.builtInZoomControls = value
+    }
+
+    fun setSetDisplayZoomControls(view: RNCWebView, value: Boolean) {
+        view.settings.displayZoomControls = value
+
+    }
+
+    fun setSetSupportMultipleWindows(view: RNCWebView, value: Boolean) {
+        view.settings.setSupportMultipleWindows(value)
+    }
+
+    fun setTextZoom(view: RNCWebView, value: Int) {
+        view.settings.textZoom = value
+    }
+
+    fun setThirdPartyCookiesEnabled(view: RNCWebView, enabled: Boolean) {
+        CookieManager.getInstance().setAcceptThirdPartyCookies(view, enabled)
+    }
+
+    fun setUrlPrefixesForDefaultIntent(view: RNCWebView, value: ReadableArray?) {
+       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value != null) {
+           (view.webViewClient as RNCWebViewClient).setUrlPrefixesForDefaultIntent(value)
+       }
+    }
 }
