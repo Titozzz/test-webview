@@ -1,11 +1,11 @@
 package com.reactnativecommunity.webview
 
 import android.app.DownloadManager
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.view.View
@@ -20,6 +20,7 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.util.*
 
+
 class RNCWebViewManagerImpl(context: ReactApplicationContext) {
     companion object {
         const val NAME = "RNCWebView"
@@ -30,6 +31,9 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
     private var mAllowsFullscreenVideo = false
     private var mDownloadingMessage: String? = null
     private var mLackPermissionToDownloadMessage: String? = null
+
+    private var mUserAgent: String? = null
+    private var mUserAgentWithApplicationName: String? = null
     private val HTML_ENCODING = "UTF-8"
     private val HTML_MIME_TYPE = "text/html"
     private val JAVASCRIPT_INTERFACE = "ReactNativeWebView"
@@ -197,6 +201,50 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
         }
     }
 
+    fun setUserAgent(view: WebView, userAgent: String?) {
+        mUserAgent = userAgent
+        setUserAgentString(view)
+    }
+
+    fun setApplicationNameForUserAgent(view: WebView, applicationName: String?) {
+        when {
+            applicationName != null -> {
+                val defaultUserAgent = WebSettings.getDefaultUserAgent(view.context)
+                mUserAgentWithApplicationName = "$defaultUserAgent $applicationName"
+            }
+            else -> {
+                mUserAgentWithApplicationName = null
+            }
+        }
+        setUserAgentString(view)
+    }
+
+    private fun setUserAgentString(view: WebView) {
+        when {
+            mUserAgent != null -> {
+                view.settings.userAgentString = mUserAgent
+            }
+            mUserAgentWithApplicationName != null -> {
+                view.settings.userAgentString = mUserAgentWithApplicationName
+            }
+            else -> {
+                view.settings.userAgentString = WebSettings.getDefaultUserAgent(view.context)
+            }
+        }
+    }
+
+    fun setBasicAuthCredential(view: WebView, credential: ReadableMap?) {
+        var basicAuthCredential: RNCBasicAuthCredential? = null
+        if (credential != null) {
+            if (credential.hasKey("username") && credential.hasKey("password")) {
+                val username = credential.getString("username")
+                val password = credential.getString("password")
+                basicAuthCredential = RNCBasicAuthCredential(username, password)
+            }
+        }
+        (view as RNCWebView).setBasicAuthCredential(basicAuthCredential)
+    }
+
     fun getModule(): RNCWebViewModule? {
         return mContext.getNativeModule(RNCWebViewModule::class.java)
     }
@@ -284,7 +332,86 @@ class RNCWebViewManagerImpl(context: ReactApplicationContext) {
     }
 
     fun setMessagingModuleName(view: RNCWebView, value: String) {
-        view.setMessagingModuleName(value)
+        view.messagingModuleName = value
+    }
+
+    fun setCacheEnabled(view: RNCWebView, enabled: Boolean) {
+        if (enabled) {
+            val ctx: Context? = view.context
+            if (ctx != null) {
+                view.settings.setAppCachePath(ctx.cacheDir.absolutePath)
+                view.settings.cacheMode = WebSettings.LOAD_DEFAULT
+                view.settings.setAppCacheEnabled(true)
+            }
+        } else {
+            view.settings.cacheMode = WebSettings.LOAD_NO_CACHE
+            view.settings.setAppCacheEnabled(false)
+        }
+    }
+
+    fun setIncognito(view: RNCWebView, enabled: Boolean) {
+        // Don't do anything when incognito is disabled
+        if (!enabled) {
+            return;
+        }
+
+        // Remove all previous cookies
+        CookieManager.getInstance().removeAllCookies(null);
+
+        // Disable caching
+        view.settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        view.settings.setAppCacheEnabled(false)
+        view.clearHistory();
+        view.clearCache(true);
+
+        // No form data or autofill enabled
+        view.clearFormData();
+        view.settings.savePassword = false;
+        view.settings.saveFormData = false;
+    }
+
+    fun setInjectedJavaScript(view: RNCWebView, injectedJavaScript: String) {
+        view.injectedJS = injectedJavaScript
+    }
+
+    fun setInjectedJavaScriptBeforeContentLoaded(view: RNCWebView, value: String) {
+        view.injectedJSBeforeContentLoaded = value
+    }
+
+    fun setInjectedJavaScriptForMainFrameOnly(view: RNCWebView, value: Boolean) {
+        view.injectedJavaScriptForMainFrameOnly = value
+    }
+
+    fun setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(view: RNCWebView, value: Boolean) {
+        view.injectedJavaScriptBeforeContentLoadedForMainFrameOnly = value
+    }
+
+    fun setJavaScriptCanOpenWindowsAutomatically(view: RNCWebView, value: Boolean) {
+        view.settings.javaScriptCanOpenWindowsAutomatically = value
+    }
+
+    fun setShowsVerticalScrollIndicator(view: RNCWebView, value: Boolean) {
+        view.isVerticalScrollBarEnabled = value
+    }
+
+    fun setShowsHorizontalScrollIndicator(view: RNCWebView, value: Boolean) {
+        view.isHorizontalScrollBarEnabled = value
+    }
+
+    fun setMessagingEnabled(view: RNCWebView, value: Boolean) {
+        view.setMessagingEnabled(value)
+    }
+
+    fun setMediaPlaybackRequiresUserAction(view: RNCWebView, value: Boolean) {
+        view.settings.mediaPlaybackRequiresUserGesture = value
+    }
+
+    fun setHasScrollEvent(view: RNCWebView, value: Boolean) {
+        view.setHasScrollEvent(value)
+    }
+
+    fun setJavaScriptEnabled(view: RNCWebView, enabled: Boolean) {
+        view.settings.javaScriptEnabled = enabled
     }
 
 }

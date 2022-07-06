@@ -22,6 +22,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.ContentSizeChangeEvent;
 import com.facebook.react.uimanager.events.Event;
@@ -29,6 +30,7 @@ import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.scroll.OnScrollDispatchHelper;
 import com.facebook.react.views.scroll.ScrollEvent;
 import com.facebook.react.views.scroll.ScrollEventType;
+import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
 import com.reactnativecommunity.webview.events.TopMessageEvent;
 
 import java.io.UnsupportedEncodingException;
@@ -160,22 +162,6 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
         return mRNCWebViewClient;
     }
 
-    public void setInjectedJavaScript(@Nullable String js) {
-        injectedJS = js;
-    }
-
-    public void setInjectedJavaScriptBeforeContentLoaded(@Nullable String js) {
-        injectedJSBeforeContentLoaded = js;
-    }
-
-    public void setInjectedJavaScriptForMainFrameOnly(boolean enabled) {
-        injectedJavaScriptForMainFrameOnly = enabled;
-    }
-
-    public void setInjectedJavaScriptBeforeContentLoadedForMainFrameOnly(boolean enabled) {
-        injectedJavaScriptBeforeContentLoadedForMainFrameOnly = enabled;
-    }
-
     protected RNCWebViewBridge createRNCWebViewBridge(RNCWebView webView) {
         return new RNCWebViewBridge(webView);
     }
@@ -203,22 +189,8 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
         }
     }
 
-    public void setMessagingModuleName(String moduleName) {
-        messagingModuleName = moduleName;
-    }
-
     protected void evaluateJavascriptWithFallback(String script) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            evaluateJavascript(script, null);
-            return;
-        }
-
-        try {
-            loadUrl("javascript:" + URLEncoder.encode(script, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            // UTF-8 should always be supported
-            throw new RuntimeException(e);
-        }
+        evaluateJavascript(script, null);
     }
 
     public void callInjectedJavaScript() {
@@ -311,9 +283,8 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
 
     protected void dispatchEvent(WebView webView, Event event) {
         ReactApplicationContext reactContext = (ReactApplicationContext) webView.getContext();
-        EventDispatcher eventDispatcher =
-                reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
-        eventDispatcher.dispatchEvent(event);
+        int reactTag = webView.getId();
+        UIManagerHelper.getEventDispatcherForReactTag(reactContext, reactTag).dispatchEvent(event);
     }
 
     protected void cleanupCallbacksAndDestroy() {

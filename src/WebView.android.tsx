@@ -1,10 +1,10 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import React, { forwardRef, ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import {
   Image,
   View,
-  NativeModules,
   ImageSourcePropType,
+  TurboModuleRegistry,
 } from 'react-native';
 
 import BatchedBridge from 'react-native/Libraries/BatchedBridge/BatchedBridge';
@@ -13,7 +13,7 @@ import codegenNativeCommandsUntyped from 'react-native/Libraries/Utilities/codeg
 
 import invariant from 'invariant';
 
-import RNCWebView from "./index";
+import RNCWebView from "./WebViewNativeComponent.android";
 import {
   defaultOriginWhitelist,
   defaultRenderError,
@@ -82,7 +82,7 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
     url: string,
     lockIdentifier?: number) => {
     if (lockIdentifier) {
-      NativeModules.RNCWebView.onShouldStartLoadWithRequestCallback(shouldStart, lockIdentifier);
+      TurboModuleRegistry.get("RNCWebView").onShouldStartLoadWithRequestCallback(shouldStart, lockIdentifier);
     } else if (shouldStart) {
       Commands.loadUrl(webViewRef, url);
     }
@@ -130,16 +130,18 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
     BatchedBridge.registerCallableModule(messagingModuleName, directEventCallbacks);
   }, [messagingModuleName, directEventCallbacks])
 
-  let otherView = null;
+  let otherView: ReactElement | undefined = undefined;
   if (viewState === 'LOADING') {
     otherView = (renderLoading || defaultRenderLoading)();
   } else if (viewState === 'ERROR') {
     invariant(lastErrorEvent != null, 'lastErrorEvent expected to be non-null');
-    otherView = (renderError || defaultRenderError)(
-      lastErrorEvent.domain,
-      lastErrorEvent.code,
-      lastErrorEvent.description,
-    );
+    if (lastErrorEvent) {
+      otherView = (renderError || defaultRenderError)(
+        lastErrorEvent.domain,
+        lastErrorEvent.code,
+        lastErrorEvent.description,
+      );  
+    }
   } else if (viewState !== 'IDLE') {
     console.error(`RNCWebView invalid state encountered: ${viewState}`);
   }
@@ -157,7 +159,6 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
     }
   }
 
-
   const NativeWebView
     = (nativeConfig?.component as (typeof NativeWebViewAndroid | undefined)) || RNCWebView;
 
@@ -166,6 +167,8 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
     {...otherProps}
     messagingEnabled={typeof onMessage === 'function'}
     messagingModuleName={messagingModuleName}
+
+    hasOnScroll={!!otherProps.onScroll}
 
     onLoadingError={onLoadingError}
     onLoadingFinish={onLoadingFinish}
@@ -207,7 +210,7 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
 
 // native implementation should return "true" only for Android 5+
 const isFileUploadSupported: () => Promise<boolean>
-  = NativeModules.RNCWebView.isFileUploadSupported();
+  = TurboModuleRegistry.get("RNCWebView").isFileUploadSupported();
 
 const WebView = Object.assign(WebViewComponent, {isFileUploadSupported});
 
