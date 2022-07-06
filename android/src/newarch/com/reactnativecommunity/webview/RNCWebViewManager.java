@@ -30,10 +30,10 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
         implements RNCWebViewManagerInterface<RNCWebView> {
 
     private final ViewManagerDelegate<RNCWebView> mDelegate;
-    private @Nullable RNCWebViewManagerImpl mRNCWebViewManagerImpl;
+    private final RNCWebViewManagerImpl mRNCWebViewManagerImpl;
 
     public RNCWebViewManager(ReactApplicationContext context) {
-        mDelegate = new RNCWebViewManagerDelegate(this);
+        mDelegate = new RNCWebViewManagerDelegate<>(this);
         mRNCWebViewManagerImpl = new RNCWebViewManagerImpl(context);
     }
 
@@ -56,23 +56,6 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     }
 
     @Override
-    @ReactProp(name = "source")
-    public void setSource(RNCWebView view, @Nullable ReadableMap value) {
-        mRNCWebViewManagerImpl.setSource(view, value);
-    }
-
-    @ReactProp(name = "javaScriptEnabled")
-    public void setJavaScriptEnabled(RNCWebView view, boolean enabled) {
-        mRNCWebViewManagerImpl.setJavaScriptEnabled(view, enabled);
-    }
-
-    @Override
-    @ReactProp(name = "userAgent")
-    public void setUserAgent(RNCWebView view, @Nullable String value) {
-        mRNCWebViewManagerImpl.setUserAgent(view, value);
-    }
-
-    @Override
     @ReactProp(name = "applicationNameForUserAgent")
     public void setApplicationNameForUserAgent(RNCWebView view, @Nullable String value) {
         mRNCWebViewManagerImpl.setApplicationNameForUserAgent(view, value);
@@ -88,6 +71,12 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     @ReactProp(name = "cacheEnabled")
     public void setCacheEnabled(RNCWebView view, boolean value) {
         mRNCWebViewManagerImpl.setCacheEnabled(view, value);
+    }
+
+    @Override
+    @ReactProp(name = "hasOnScroll")
+    public void setHasOnScroll(RNCWebView view, boolean hasScrollEvent) {
+        mRNCWebViewManagerImpl.setHasScrollEvent(view, hasScrollEvent);
     }
 
     @Override
@@ -129,6 +118,11 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
 
     }
 
+    @ReactProp(name = "javaScriptEnabled")
+    public void setJavaScriptEnabled(RNCWebView view, boolean enabled) {
+        mRNCWebViewManagerImpl.setJavaScriptEnabled(view, enabled);
+    }
+
     @Override
     @ReactProp(name = "mediaPlaybackRequiresUserAction")
     public void setMediaPlaybackRequiresUserAction(RNCWebView view, boolean value) {
@@ -161,20 +155,26 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
     }
 
     @Override
-    @ReactProp(name = "hasOnScroll")
-    public void setHasOnScroll(RNCWebView view, boolean hasScrollEvent) {
-        mRNCWebViewManagerImpl.setHasScrollEvent(view, hasScrollEvent);
+    @ReactProp(name = "source")
+    public void setSource(RNCWebView view, @Nullable ReadableMap value) {
+        mRNCWebViewManagerImpl.setSource(view, value);
+    }
+    
+    @Override
+    @ReactProp(name = "userAgent")
+    public void setUserAgent(RNCWebView view, @Nullable String value) {
+        mRNCWebViewManagerImpl.setUserAgent(view, value);
     }
 
     @Override
-    protected void addEventEmitters(ThemedReactContext reactContext, RNCWebView view) {
+    protected void addEventEmitters(@NonNull ThemedReactContext reactContext, RNCWebView view) {
         // Do not register default touch emitter and let WebView implementation handle touches
         view.setWebViewClient(new RNCWebViewClient());
     }
 
     @Override
-    public Map getExportedCustomDirectEventTypeConstants() {
-        Map export = super.getExportedCustomDirectEventTypeConstants();
+    public Map<String, Object> getExportedCustomDirectEventTypeConstants() {
+        Map<String, Object> export = super.getExportedCustomDirectEventTypeConstants();
         if (export == null) {
             export = MapBuilder.newHashMap();
         }
