@@ -1,6 +1,7 @@
 // This guard prevent the code from being compiled in the old architecture
 #ifdef RCT_NEW_ARCH_ENABLED
 #import "RNCWebView.h"
+#import "RNCWebViewImpl.h"
 
 #import <react/renderer/components/RNCWebViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNCWebViewSpec/EventEmitters.h>
@@ -16,7 +17,7 @@ using namespace facebook::react;
 @end
 
 @implementation RNCWebView {
-    UIView * _view;
+    RNCWebViewImpl * _webView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -29,10 +30,8 @@ using namespace facebook::react;
 if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const RNCWebViewProps>();
     _props = defaultProps;
-
-    _view = [[UIView alloc] init];
-
-    self.contentView = _view;
+    _webView = [[RNCWebViewImpl alloc] initWithFrame:frame];
+    self.contentView = _webView;
 }
 
 return self;
@@ -42,10 +41,10 @@ return self;
 {
     const auto &oldViewProps = *std::static_pointer_cast<RNCWebViewProps const>(_props);
     const auto &newViewProps = *std::static_pointer_cast<RNCWebViewProps const>(props);
-
-    if (oldViewProps.color != newViewProps.color) {
-        NSString * colorToConvert = [[NSString alloc] initWithUTF8String: newViewProps.color.c_str()];
-        [_view setBackgroundColor:[self hexStringToColor:colorToConvert]];
+    
+    if (oldViewProps.source.uri != newViewProps.source.uri) {
+        NSDictionary *dict = @{ @"uri" : [NSString stringWithCString:newViewProps.source.uri.c_str() encoding:[NSString defaultCStringEncoding]]};
+        [_webView setSource: dict];
     }
 
     [super updateProps:props oldProps:oldProps];
@@ -54,20 +53,6 @@ return self;
 Class<RCTComponentViewProtocol> RNCWebViewCls(void)
 {
 return RNCWebView.class;
-}
-
-- hexStringToColor:(NSString *)stringToConvert
-{
-NSString *noHashString = [stringToConvert stringByReplacingOccurrencesOfString:@"#" withString:@""];
-NSScanner *stringScanner = [NSScanner scannerWithString:noHashString];
-
-unsigned hex;
-if (![stringScanner scanHexInt:&hex]) return nil;
-int r = (hex >> 16) & 0xFF;
-int g = (hex >> 8) & 0xFF;
-int b = (hex) & 0xFF;
-
-return [UIColor colorWithRed:r / 255.0f green:g / 255.0f blue:b / 255.0f alpha:1.0f];
 }
 
 @end

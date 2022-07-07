@@ -1,4 +1,5 @@
 #import <React/RCTViewManager.h>
+#import "RNCWebViewImpl.h"
 
 @interface RNCWebViewManager : RCTViewManager
 @end
@@ -9,13 +10,14 @@ RCT_EXPORT_MODULE(RNCWebView)
 
 - (UIView *)view
 {
-return [[UIView alloc] init];
+return [[RNCWebViewImpl alloc] init];
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(color, NSString, UIView)
 {
 [view setBackgroundColor:[self hexStringToColor:json]];
 }
+RCT_EXPORT_VIEW_PROPERTY(source, NSDictionary)
 
 - hexStringToColor:(NSString *)stringToConvert
 {
