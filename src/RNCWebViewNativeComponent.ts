@@ -187,7 +187,7 @@ export interface NativeProps extends ViewProps {
   textInteractionEnabled?: boolean;
   mediaCapturePermissionGrantType?: string;
   // !iOS only
-  
+
   allowFileAccessFromFileURLs?: boolean;
   allowUniversalAccessFromFileURLs?: boolean;
   applicationNameForUserAgent?: string;

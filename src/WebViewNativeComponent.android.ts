@@ -1,9 +1,3 @@
-import { requireNativeComponent } from 'react-native'
-
-const isFabricEnabled = global.nativeFabricUIManager != null;
-
-const webView = true ?
-    require("./RNCWebViewNativeComponent").default :
-    requireNativeComponent("RNCWebView")
+const webView = require("./RNCWebViewNativeComponent").default
 
 export default webView;

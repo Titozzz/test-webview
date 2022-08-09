@@ -35,13 +35,13 @@
         "react-native": "*"
     },
     "codegenConfig": {
-        "libraries": [
-            {
-                "name": "RNCWebViewSpec",
-                "type": "components",
-                "jsSrcsDir": "src"
-            }
-        ]
+        "name": "RNCWebViewSpec",
+        "type": "all",
+        "jsSrcsDir": "src",
+        "android": {
+            "javaPackageName": "com.reactnativecommunity.webview"
+        }
+
     },
     "dependencies": {
         "escape-string-regexp": "^5.0.0"
